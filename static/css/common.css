@@ -2,6 +2,7 @@
 @import url(./reset.css);
 @import url(./hero.css);
 @import url(./process.css);
+@import url(./packages.css);
 
 :root{
     /* Base */
@@ -13,12 +14,12 @@
     /* ink */
     --ink: #24303a;
     --ink1: #7ec2ec;
-    --ink2: #e69ab1;
+    --ink2: #e98ca8;
     --ink3: #7096ff;    
 
     /* Accents */
     --accent: #bfe6ff;
-    --accent2: #e3bcc8;
+    --accent2: #ffd2e0;
     --accent3: #aec4ff;
 
     /* Effects */
@@ -37,6 +38,7 @@
 
 html {
     scroll-padding-top: calc(var(--navH) + 12px);
+    scroll-behavior: smooth;
 }
 
 .topnav {

@@ -14,6 +14,7 @@
 .sec__head {
     max-width: 1080px;
     margin: 0 auto 14px;
+    padding-left: 5%;
 }
 
 .sec__eyebrow {
@@ -95,7 +96,7 @@
     transform: translateX(-50%);
     font-size: 12px;
     line-height: 1;
-    color: rgba(36,48,58,.30);
+    color: var(--accent3);
     pointer-events: none;
     opacity: .22;
 }
@@ -276,14 +277,14 @@
     animation: arrowPulse 5s cubic-bezier(.22,.61,.36,1) infinite;
 }
 
-.timeline__item:nth-child(1){ animation-delay: 0s; }
+.timeline__item:nth-child(1){ animation-delay: .2s; }
 .timeline__item:nth-child(2){ animation-delay: .83s; }
 .timeline__item:nth-child(3){ animation-delay: 1.67s; }
 .timeline__item:nth-child(4){ animation-delay: 2.50s; }
 .timeline__item:nth-child(5){ animation-delay: 3.33s; }
 .timeline__item:nth-child(6){ animation-delay: 4.17s; }
 
-.timeline__item:nth-child(1)::after{ animation-delay: .20s; }
+.timeline__item:nth-child(1)::after{ animation-delay: .4s; }
 .timeline__item:nth-child(2)::after{ animation-delay: 1.03s; }
 .timeline__item:nth-child(3)::after{ animation-delay: 1.87s; }
 .timeline__item:nth-child(4)::after{ animation-delay: 2.70s; }
