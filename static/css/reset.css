@@ -50,3 +50,7 @@ a {
 html, body{
     background: var(--bg);
 }
+
+div * {
+	box-sizing: border-box;
+}

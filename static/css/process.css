@@ -8,7 +8,7 @@
 }
 
 .sec {
-    padding: clamp(28px, 5vw, 60px) 16px;
+    padding: clamp(28px, 5vw, 40px) 16px;
 }
 
 .sec__head {

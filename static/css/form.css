@@ -1,0 +1,154 @@
+#form.sec {
+    position: relative;
+    background: linear-gradient(
+    to bottom,
+    #fffab34d,
+    #bfe6ff4d 220px
+    );
+}
+
+#form .card {
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.fWrap {
+    display: grid;
+    gap: .8em;
+}
+
+.fField {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+}
+
+.fLabel {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-left: .6em;
+}
+
+.fLabel[for="artmug"] {
+    display: none;
+}
+
+.fInput {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.fInput:focus {
+    outline: none;
+    border-color: rgba(126,194,236,.6);
+    box-shadow: 0 0 0 3px rgba(126,194,236,.15);
+}
+
+.fTextarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.fHelp {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-left: .6em;
+}
+
+.fHelp em {
+    font-style: normal;
+    font-weight: 700;
+    color: var(--ink3);
+}
+
+.fHelp--tiny {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.fField--group {
+    gap: .5em;
+}
+
+.fChoices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: .5em;
+}
+
+.fChoice {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    background: #fff;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.fChoice input {
+    accent-color: #7ec2ec;
+}
+
+.fChoice:hover {
+    border-color: rgba(126,194,236,.6);
+    background: rgba(126,194,236,.08);
+}
+
+.fChoice input:checked + .fChoice__label {
+    font-weight: 800;
+}
+
+.fActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+#btnInquiryCopy {
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    border: 1px solid var(--line);
+    background: #fff;
+    cursor: pointer;
+    transition: background .15s ease, box-shadow .15s ease;
+}
+
+#btnInquiryCopy:hover {
+    background: rgba(126,194,236,.12);
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}
+
+.fField[data-key="package"] {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(126,194,236,.08);
+}
+
+.fField[data-key="options"] {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(0,0,0,.02);
+}
+
+.fTextarea {
+    font-family: 'NanumSquareNeo';    
+}
+
+.fTextarea::placeholder {
+    font-family: 'NanumSquareNeo';
+    font-weight: 400;
+}
+
