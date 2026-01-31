@@ -55,3 +55,104 @@
     line-height: 1.6;
     color: var(--muted);
 }
+
+/* ===== FAQ polish ===== */
+
+/* 카드 안쪽 여백 + 배경 톤 */
+#faq .card{
+  padding: 18px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.72);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+/* 그룹 섹션 간격 */
+.faqGroup{
+  padding: 10px 0 2px;
+}
+.faqGroup + .faqGroup{
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+
+/* 그룹 타이틀을 “섹션 헤더”처럼 */
+.faqGroup__title{
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+}
+
+s.faqItem{
+  border-bottom: 0;
+  border-radius: 14px;
+  padding: 4px 10px;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.faqItem:hover{
+  background: rgba(0,0,0,.03);
+}
+.faqItem.is-open{
+  background: rgba(255, 220, 235, .22);
+  box-shadow: 0 6px 18px rgba(0,0,0,.05);
+}
+
+/* 질문 줄: 높이/정렬/클릭 영역 */
+.faqQ {
+    padding: 12px 6px;
+    gap: 12px;
+}
+
+.faqQ__text {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.faqQ:focus-visible {
+  outline: 2px solid rgba(0,0,0,.14);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* + / - 아이콘을 동그란 버튼 느낌으로 */
+.faqQ__icon{
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(0,0,0,.05);
+    font-size: 16px;
+    transition: transform .25s ease, background .18s ease;
+}
+.faqItem.is-open .faqQ__icon{
+  background: rgba(255, 120, 150, .15);
+}
+
+/* 답변 영역: 텍스트 톤/라인/패딩 */
+.faqA__inner{
+  padding: 0 6px 14px;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--muted);
+}
+
+/* 답변 내 “⦁” 같은 불릿이 예쁘게 보이도록 */
+.faqA__inner br + br{
+  content: "";
+}
+.faqA__inner{
+  word-break: keep-all;
+}
+
+/* 모바일에서 카드 여백 조금 줄이기 */
+@media (max-width: 640px){
+  #faq .card{ padding: 14px 14px; }
+  .faqItem{ padding: 4px 8px; }
+  .faqQ{ padding: 12px 4px; }
+}
