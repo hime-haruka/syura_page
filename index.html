@@ -9,24 +9,24 @@
 </head>
 <body class="nsn400">
     <header class="topnav" id="nav">
-        <div class="topnav__inner">
-            <nav class="topnav__links" aria-label="섹션 이동">
-                <a href="#top">TOP</a>
-                <a href="#process">안내사항</a>
-                <a href="#packages">패키지</a>
-                <a href="#options">옵션</a>
-                <a href="#templates">템플릿</a>
-                <a href="#faq">FAQ</a>
-                <a href="#form">문의하기</a>
-            </nav>
-        </div>
+    <div class="topnav__inner">
+        <nav class="topnav__links" id="navMenu" aria-label="섹션 이동">
+        <a href="#top">TOP</a>
+        <a href="#process">안내사항</a>
+        <a href="#packages">패키지</a>
+        <a href="#options">옵션</a>
+        <a href="#templates">템플릿</a>
+        <a href="#portfolio">포트폴리오</a>
+        <a href="#faq">FAQ</a>
+        <a href="#form">문의하기</a>
+        </nav>
+    </div>
     </header>
 
     <main>
         <!-- HERO SECTION -->
         <section class="hero" id="top">
             <div class="hero__inner">
-                <!-- LEFT: Copy -->
                 <div class="hero__copy">
                     <p class="hero__kicker">아트머그 작가용 포트폴리오 제작</p>
                     <h1 class="hero__title ptd800">쉽고 간편하게 관리하는 포트폴리오</h1>
@@ -44,7 +44,7 @@
                     </ul>
                 </div>
 
-                <!-- RIGHT: Visual (Before/After) -->
+                <!-- RIGHT -->
                 <div class="hero__visual" aria-label="대표 화면 미리보기">
                     <figure class="showcase">
                         <img
@@ -55,19 +55,19 @@
                         />
 
                         <!-- Callouts -->
-                        <div class="callout callout--1">
-                        <span class="callout__dot" aria-hidden="true"></span>
-                        <span class="callout__text">작업 타입/옵션 정리</span>
-                        </div>
-
-                        <div class="callout callout--2">
-                        <span class="callout__dot" aria-hidden="true"></span>
-                        <span class="callout__text">가격·안내 문구 빠른 반영</span>
-                        </div>
-
-                        <div class="callout callout--3">
-                        <span class="callout__dot" aria-hidden="true"></span>
-                        <span class="callout__text">신청 흐름에 맞춘 섹션 구성</span>
+                        <div class="callWrap">
+                            <div class="callout callout--1">
+                                <span class="callout__dot" aria-hidden="true"></span>
+                                <span class="callout__text">작업 타입/옵션 정리</span>
+                            </div>
+                            <div class="callout callout--2">
+                                <span class="callout__dot" aria-hidden="true"></span>
+                                <span class="callout__text">가격·안내 문구 빠른 반영</span>
+                            </div>
+                            <div class="callout callout--3">
+                                <span class="callout__dot" aria-hidden="true"></span>
+                                <span class="callout__text">신청 흐름에 맞춘 섹션 구성</span>
+                            </div>
                         </div>
                     </figure>
                 </div>
@@ -165,32 +165,34 @@
         <section class="sec" id="options"></section>
 
         <section class="sec" id="templates"></section>
-            <!-- Template Slider -->
-            <div class="tplViewer" id="tplViewer" hidden>
-            <div class="tplViewer__backdrop"></div>
+        
+        <!-- Template Slider -->
+        <div class="tplViewer" id="tplViewer" hidden>
+        <div class="tplViewer__backdrop"></div>
 
-            <div class="tplViewer__panel">
-                <button class="tplViewer__close" aria-label="닫기">✕</button>
-                <div class="tplTags"></div>
+        <div class="tplViewer__panel">
+            <button class="tplViewer__close" aria-label="닫기">✕</button>
+            <div class="tplTags"></div>
 
-                <div class="tplSlider">
-                <button class="tplNav tplNav--prev">‹</button>
+            <div class="tplSlider">
+            <button class="tplNav tplNav--prev">‹</button>
 
-                <div class="tplSlides">
-                </div>
-
-                <button class="tplNav tplNav--next">›</button>
-                </div>
-
-                <div class="tplCaption">
-                <div class="tplCaption__desc"></div>
-                <div class="tplCaption__note"></div>
-                </div>
-
-                <div class="tplDots"></div>
-            </div>
+            <div class="tplSlides">
             </div>
 
+            <button class="tplNav tplNav--next">›</button>
+            </div>
+
+            <div class="tplCaption">
+            <div class="tplCaption__desc"></div>
+            <div class="tplCaption__note"></div>
+            </div>
+
+            <div class="tplDots"></div>
+        </div>
+        </div>
+
+        <section class="sec" id="portfolio"></section>
 
         <section class="sec" id="faq"></section>
 

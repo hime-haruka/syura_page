@@ -274,9 +274,28 @@
       };
     }
 
-    const rowsHTML = items
+    function renderValue(v) {
+      const val = (v ?? "").toString().trim();
+      if (!val) return `<span class="pkg-no">—</span>`;
+      if (val === "O") return `<span class="pkg-ok">✓</span>`;
+      if (val === "✕") return `<span class="pkg-no">—</span>`;
+      return `<span class="pkg-text">${val}</span>`;
+    }
+
+    function valueToText(v) {
+      const val = (v ?? "").toString().trim();
+      if (!val) return "—";
+      if (val === "O") return "✓";
+      if (val === "✕") return "—";
+      return val;
+    }
+
+    const rows = items
       .map(normalizeRow)
-      .filter((it) => String(it.label).trim())
+      .filter((it) => String(it.label).trim());
+
+    // --- table rows ---
+    const rowsHTML = rows
       .map(
         (it) => `
           <tr>
@@ -293,6 +312,46 @@
       )
       .join("");
 
+    // --- cards (mobile) ---
+    const PKGS = [
+      { key: "basic", title: "베이직" },
+      { key: "standard", title: "스탠다드", recommend: true },
+      { key: "premium", title: "프리미엄" },
+      { key: "custom", title: "커스텀" },
+    ];
+
+    const cardsHTML = PKGS.map((p) => {
+      const itemsHTML = rows
+        .map((r) => {
+          const label = String(r.label || "").trim();
+          const value = valueToText(r[p.key]);
+          const desc = String(r.desc || "").trim();
+
+          return `
+            <div class="pkgCard__item">
+              <div class="pkgCard__label">
+                ${label}
+                ${desc ? `<div class="pkgCard__desc">${desc}</div>` : ``}
+              </div>
+              <div class="pkgCard__value">${value}</div>
+            </div>
+          `.trim();
+        })
+        .join("");
+
+      return `
+        <section class="pkgCard ${p.recommend ? "is-recommend" : ""}">
+          <header class="pkgCard__head">
+            <h3 class="pkgCard__title">${p.title}</h3>
+            ${p.recommend ? `<span class="pkgCard__badge">추천</span>` : ``}
+          </header>
+          <div class="pkgCard__body">
+            ${itemsHTML}
+          </div>
+        </section>
+      `.trim();
+    }).join("");
+
     root.innerHTML = `
       <div class="sec__head">
         <p class="sec__eyebrow">패키지 비교</p>
@@ -302,26 +361,29 @@
 
       <div class="card">
         <div class="pkg-wrap">
+          <!-- desktop/tablet: table -->
           <table class="pkg-table">
             <thead>
               <tr>
                 <th></th>
                 <th>베이직</th>
-                <th class="is-recommend">
-                <span class="pkg-head">스탠다드</span>
-                </th>
+                <th class="is-recommend"><span class="pkg-head">스탠다드</span></th>
                 <th>프리미엄</th>
                 <th>커스텀</th>
               </tr>
             </thead>
-            <tbody>
-              ${rowsHTML}
-            </tbody>
+            <tbody>${rowsHTML}</tbody>
           </table>
+
+          <!-- mobile: cards -->
+          <div class="pkg-cards">
+            ${cardsHTML}
+          </div>
         </div>
       </div>
     `;
   }
+
 
 
   async function loadPackages() {
@@ -336,11 +398,11 @@
 
       const csvText = await res.text();
 
-      // 1) 먼저 파싱부터
+      // 1) 파싱
       const rows = parseCSV(csvText);
       const objs = rowsToObjects(rows);
 
-      // 2) 그 다음에 로그
+      // 2) 로그
       console.log("[package url]", url);
       console.log("[package csv head]", csvText.slice(0, 120));
       console.log("[package rows count]", rows.length);
@@ -376,7 +438,6 @@
     );
   }
 
-  // ✅ 줄바꿈 자동 인식 + <em> 유지
   function withBreaks(html) {
     return stripScripts(html).replace(/\r\n|\r|\n/g, "<br>");
   }
@@ -530,7 +591,7 @@
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7bBd8d_YfahCugR2TL-zaYDB7r3-aMXRBifboBW7bLlcJv-ffmtl1TkjmUXa0zowJyEKe8BkFc9ux/pub?gid=400943593&single=true&output=csv";
 
   const SHEET_NAME = "form";
-  const TARGET_ID = "form"; // ✅ 섹션 id="form" 이어야 함
+  const TARGET_ID = "form";
 
   function stripScripts(html) {
     return String(html).replace(
@@ -1041,7 +1102,7 @@ function bindFAQToggle() {
 }
 
 /* =========================
-   Templates (group by key + drive url convert)
+   Templates
 ========================= */
 (function () {
   const CSV_BASE =
@@ -1065,8 +1126,6 @@ function bindFAQToggle() {
   function withBreaks(html) {
     return stripScripts(html).replace(/\r\n|\r|\n/g, "<br>");
   }
-
-  // Google Drive 공유 링크 파일 ID 추출
   function extractDriveFileId(url) {
     const s = String(url || "").trim();
     if (!s) return null;
@@ -1206,7 +1265,6 @@ function bindFAQToggle() {
       });
     }
 
-    // 정렬 + 최소 5장 필터
     const templates = Array.from(map.values())
       .map((t) => {
         t.slides.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -1382,7 +1440,6 @@ function bindFAQToggle() {
   viewer.querySelector(".tplViewer__close").onclick = closeViewer;
   viewer.querySelector(".tplViewer__backdrop").onclick = closeViewer;
 
-  /* 카드 클릭 연결 */
   window.bindTemplateCards = function (templates) {
     document.querySelectorAll(".tplCard").forEach((card, idx) => {
       card.addEventListener("click", () => {
@@ -1390,4 +1447,241 @@ function bindFAQToggle() {
       });
     });
   };
+})();
+
+
+/* =========================
+   Portfolio
+========================= */
+(function () {
+  const CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7bBd8d_YfahCugR2TL-zaYDB7r3-aMXRBifboBW7bLlcJv-ffmtl1TkjmUXa0zowJyEKe8BkFc9ux/pub?gid=400850518&single=true&output=csv";
+
+  const TARGET_ID = "portfolio";
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let cur = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+
+      if (ch === '"' && inQuotes && next === '"') {
+        cur += '"';
+        i++;
+        continue;
+      }
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (!inQuotes && (ch === "," || ch === "\n" || ch === "\r")) {
+        row.push(cur);
+        cur = "";
+
+        if (ch === "\r" && next === "\n") i++;
+        if (ch === "\n" || ch === "\r") {
+          if (row.some((c) => String(c).trim() !== "")) rows.push(row);
+          row = [];
+        }
+        continue;
+      }
+
+      cur += ch;
+    }
+
+    row.push(cur);
+    if (row.some((c) => String(c).trim() !== "")) rows.push(row);
+    return rows;
+  }
+
+  function rowsToObjects(rows) {
+    const header = rows[0].map((h) => String(h).trim());
+    const body = rows.slice(1);
+
+    return body.map((r) => {
+      const obj = {};
+      header.forEach((h, i) => (obj[h] = r[i] ?? ""));
+      return obj;
+    });
+  }
+
+  function extractDriveFileId(url) {
+    const s = String(url || "").trim();
+    if (!s) return null;
+
+    const m1 = s.match(/\/file\/d\/([a-zA-Z0-9_-]{10,})/);
+    if (m1) return m1[1];
+
+    const m2 = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+    if (m2) return m2[1];
+
+    const m3 = s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+    if (m3) return m3[1];
+
+    return null;
+  }
+
+  function normalizeImageUrl(url) {
+    const s = String(url || "").trim();
+    if (!s) return "";
+
+    // 이미 변환된 형태면 그대로
+    if (s.includes("lh3.googleusercontent.com/d/")) return s;
+
+    // drive 링크면 파일 id 뽑아서 변환
+    if (s.includes("drive.google.com")) {
+      const id = extractDriveFileId(s);
+      if (id) return `https://lh3.googleusercontent.com/d/${id}`;
+    }
+
+    return s;
+  }
+
+  function escHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function escAttr(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function normalizeRow(o) {
+    const pick = (keys) => {
+      for (const k of keys) {
+        const v = o[k];
+        if (v !== undefined && v !== null) return v;
+      }
+      return "";
+    };
+
+    return {
+      order: Number(String(pick(["order", "Order", "ORDER", "\ufefforder"])).trim()) || 0,
+      name: String(pick(["name", "Name", "NAME", "\ufeffname"])).trim(),
+      package: String(pick(["package", "Package", "PACKAGE", "\ufeffpackage"])).trim(),
+      section: String(pick(["section", "Section", "SECTION", "\ufeffsection"])).trim(),
+      type: String(pick(["type", "Type", "TYPE", "\ufefftype"])).trim(),
+      image: normalizeImageUrl(pick(["image", "Image", "IMAGE", "\ufeffimage"])),
+      link: String(pick(["link", "Link", "LINK", "\ufefflink", "url", "URL"])).trim(),
+    };
+  }
+
+  function renderPortfolio(items) {
+    const root = document.getElementById(TARGET_ID);
+    if (!root) return;
+
+    if (!items.length) {
+      root.innerHTML = `
+        <div class="sec__head">
+          <p class="sec__eyebrow">포트폴리오</p>
+          <h2 class="sec__title">제작 사례</h2>
+          <p class="sec__desc">표시할 포트폴리오가 없습니다.</p>
+        </div>
+        <div class="card">
+          <div class="notice__error">CSV 데이터/공개 설정/헤더를 확인해주세요.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const cards = items
+      .map((it) => {
+        const title = it.name || "Untitled";
+        const subParts = [it.package, it.section, it.type]
+        .filter(Boolean)
+        .map(v => `<span>${escHtml(v)}</span>`)
+        .join("");
+        const href = it.link || "#";
+        const img = it.image || "";
+
+        return `
+        <a class="tplCard pfCard" href="${escAttr(href)}" target="_blank" rel="noopener noreferrer">
+          <div class="tplCard__thumb">
+            ${
+              img
+                ? `<img src="${escAttr(img)}" alt="${escAttr(title)}" loading="lazy">`
+                : ``
+            }
+            <span class="pfCard__ext" aria-hidden="true">
+              <svg viewBox="0 0 16 16" class="pfCard__icon">
+                <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
+                <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
+              </svg>
+            </span>
+          </div>
+
+          <div class="tplCard__meta">
+            <div class="tplCard__name">${escHtml(title)}</div>
+            <div class="tplCard__sub">${subParts}</div>
+          </div>
+        </a>
+      `.trim();
+      })
+      .join("");
+
+    root.innerHTML = `
+      <div class="sec__head">
+        <p class="sec__eyebrow">실 적용 사례</p>
+        <h2 class="sec__title">포트폴리오</h2>
+        <p class="sec__desc">카드를 클릭하면 아트머그 페이지로 이동합니다.</p>
+      </div>
+
+      <div class="card">
+        <div class="tplGrid">
+          ${cards}
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadPortfolio() {
+    const root = document.getElementById(TARGET_ID);
+    if (!root) return;
+
+    root.innerHTML = `
+      <div class="sec__head">
+        <p class="sec__eyebrow">포트폴리오</p>
+        <h2 class="sec__title">제작 사례</h2>
+        <p class="sec__desc">불러오는 중…</p>
+      </div>
+      <div class="card">
+        <div class="notice__loading">불러오는 중…</div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch(CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
+
+      const csvText = await res.text();
+      const rows = parseCSV(csvText);
+      if (!rows || rows.length < 2) throw new Error("CSV empty");
+
+      const objs = rowsToObjects(rows);
+      const items = objs
+        .map(normalizeRow)
+        .filter((it) => it.name && it.link)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      renderPortfolio(items);
+    } catch (err) {
+      console.warn("[portfolio] load failed:", err);
+      root.innerHTML =
+        `<div class="notice__error">포트폴리오를 불러오지 못했습니다. (시트 공개/CSV 링크/헤더 확인)</div>`;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadPortfolio);
 })();
