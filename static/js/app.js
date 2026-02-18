@@ -1102,355 +1102,6 @@ function bindFAQToggle() {
 }
 
 /* =========================
-   Templates
-========================= */
-(function () {
-  const CSV_BASE =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7bBd8d_YfahCugR2TL-zaYDB7r3-aMXRBifboBW7bLlcJv-ffmtl1TkjmUXa0zowJyEKe8BkFc9ux/pub?gid=279672905&single=true&output=csv";
-
-  const SHEET_NAME = "templates";
-  const TARGET_ID = "templates";
-
-  // --- utils ---
-  function toBool(v) {
-    return String(v).trim().toLowerCase() === "true";
-  }
-
-  function stripScripts(html) {
-    return String(html).replace(
-      /<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi,
-      ""
-    );
-  }
-
-  function withBreaks(html) {
-    return stripScripts(html).replace(/\r\n|\r|\n/g, "<br>");
-  }
-  function extractDriveFileId(url) {
-    const s = String(url || "").trim();
-    if (!s) return null;
-
-    const m1 = s.match(/\/file\/d\/([a-zA-Z0-9_-]{10,})/);
-    if (m1) return m1[1];
-
-    const m2 = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
-    if (m2) return m2[1];
-
-    const m3 = s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
-    if (m3) return m3[1];
-
-    return null;
-  }
-
-  function normalizeImageUrl(url) {
-    const s = String(url || "").trim();
-    if (!s) return "";
-
-    if (s.includes("lh3.googleusercontent.com/d/")) return s;
-
-    if (s.includes("drive.google.com")) {
-      const id = extractDriveFileId(s);
-      if (id) return `https://lh3.googleusercontent.com/d/${id}`;
-    }
-
-    return s;
-  }
-
-  function parseCSV(text) {
-    const rows = [];
-    let row = [];
-    let cur = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      const next = text[i + 1];
-
-      if (ch === '"' && inQuotes && next === '"') {
-        cur += '"';
-        i++;
-        continue;
-      }
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-        continue;
-      }
-
-      if (!inQuotes && (ch === "," || ch === "\n" || ch === "\r")) {
-        row.push(cur);
-        cur = "";
-
-        if (ch === "\r" && next === "\n") i++;
-        if (ch === "\n" || ch === "\r") {
-          if (row.some((c) => String(c).trim() !== "")) rows.push(row);
-          row = [];
-        }
-        continue;
-      }
-      cur += ch;
-    }
-
-    row.push(cur);
-    if (row.some((c) => String(c).trim() !== "")) rows.push(row);
-    return rows;
-  }
-
-  function rowsToObjects(rows) {
-    const header = rows[0].map((h) => String(h).trim());
-    const body = rows.slice(1);
-
-    return body.map((r) => {
-      const obj = {};
-      header.forEach((h, i) => (obj[h] = r[i] ?? ""));
-      return obj;
-    });
-  }
-
-  function normalizeRow(o) {
-    const pick = (keys) => {
-      for (const k of keys) {
-        const v = o[k];
-        if (v !== undefined && v !== null) return v;
-      }
-      return "";
-    };
-
-    return {
-      key: String(pick(["key", "Key", "KEY", "\ufeffkey"])).trim(),
-      name: String(pick(["name", "Name", "NAME", "\ufeffname"])).trim(),
-      package: String(pick(["package", "Package", "PACKAGE", "\ufeffpackage"])).trim(),
-      section: String(pick(["section", "Section", "SECTION", "\ufeffsection"])).trim(),
-      image: normalizeImageUrl(pick(["image", "Image", "IMAGE", "\ufeffimage"])),
-      desc: String(pick(["desc", "Desc", "DESC", "\ufeffdesc"])).trim(),
-      note: String(pick(["note", "Note", "NOTE", "\ufeffnote"])).trim(),
-      tags: String(pick(["tags", "Tags", "TAGS", "\ufefftags"])).trim(),
-      order: Number(String(pick(["order", "Order", "ORDER", "\ufefforder"])).trim() || 0),
-      hidden: toBool(pick(["hidden", "Hidden", "HIDDEN", "\ufeffhidden"])),
-    };
-  }
-
-  function groupTemplates(rows) {
-    const map = new Map();
-
-    for (const raw of rows) {
-      const r = normalizeRow(raw);
-      if (!r.key) continue;
-
-      if (r.hidden) continue;
-
-      if (!r.image) continue;
-
-      if (!map.has(r.key)) {
-        map.set(r.key, {
-          key: r.key,
-          name: r.name,
-          package: r.package,
-          section: r.section,
-          tags: r.tags,
-          slides: [],
-        });
-      }
-
-      const g = map.get(r.key);
-      if (!g.name && r.name) g.name = r.name;
-      if (!g.package && r.package) g.package = r.package;
-      if (!g.section && r.section) g.section = r.section;
-      if (!g.tags && r.tags) g.tags = r.tags;
-
-      g.slides.push({
-        image: r.image,
-        desc: r.desc,
-        note: r.note,
-        order: r.order,
-      });
-    }
-
-    const templates = Array.from(map.values())
-      .map((t) => {
-        t.slides.sort((a, b) => (a.order || 0) - (b.order || 0));
-        return t;
-      })
-      .filter((t) => t.slides.length >= 5);
-
-    return templates;
-  }
-
-  function renderDebug(templates) {
-    const root = document.getElementById(TARGET_ID);
-    if (!root) return;
-
-    if (!templates.length) {
-      root.innerHTML = `
-        <div class="sec__head">
-          <p class="sec__eyebrow">템플릿 미리보기</p>
-          <h2 class="sec__title">템플릿 쇼케이스</h2>
-          <p class="sec__desc">준비된 템플릿을 불러오고 있어요.</p>
-        </div>
-        <div class="card">
-          <div class="notice__error">표시할 템플릿이 없습니다. (이미지 5장 이상 & hidden=FALSE)</div>
-        </div>
-      `;
-      return;
-    }
-
-    const cards = templates
-      .map((t) => {
-        const cover = t.slides[0]?.image || "";
-        const count = t.slides.length;
-        const name = t.name || t.key;
-
-        return `
-          <div class="tplCard">
-            <div class="tplCard__thumb">
-              <img src="${cover}" alt="${name}">
-            </div>
-            <div class="tplCard__meta">
-              <div class="tplCard__name">${name}</div>
-              <div class="tplCard__sub">${count} slides</div>
-            </div>
-          </div>
-        `.trim();
-      })
-      .join("");
-
-    root.innerHTML = `
-      <div class="sec__head">
-        <p class="sec__eyebrow">템플릿 미리보기</p>
-        <h2 class="sec__title">템플릿 쇼케이스</h2>
-        <p class="sec__desc">템플릿별 슬라이드를 확인할 수 있습니다.</p>
-      </div>
-
-      <div class="card">
-        <div class="tplGrid">
-          ${cards}
-        </div>
-      </div>
-    `;
-  }
-
-  async function loadTemplates() {
-    const root = document.getElementById(TARGET_ID);
-    if (!root) return;
-
-    const url = CSV_BASE + `&sheet=${encodeURIComponent(SHEET_NAME)}`;
-
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
-
-      const csvText = await res.text();
-      const rows = parseCSV(csvText);
-      const objs = rowsToObjects(rows);
-
-      const templates = groupTemplates(objs);
-
-      console.log("[templates] groups:", templates.length);
-      console.log("[templates] sample:", templates[0]);
-
-      renderDebug(templates);
-      bindTemplateCards(templates);
-    } catch (err) {
-      console.warn("[templates] load failed:", err);
-      root.innerHTML =
-        `<div class="notice__error">템플릿을 불러오지 못했습니다. (시트 공개/탭/헤더 확인)</div>`;
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", loadTemplates);
-})();
-
-/* =========================
-   Template Slider UI
-========================= */
-(function () {
-  const viewer = document.getElementById("tplViewer");
-  const slidesEl = viewer.querySelector(".tplSlides");
-  const dotsEl = viewer.querySelector(".tplDots");
-  const descEl = viewer.querySelector(".tplCaption__desc");
-  const noteEl = viewer.querySelector(".tplCaption__note");
-
-  let current = 0;
-  let slides = [];
-
-  function openViewer(template) {
-    slides = template.slides;
-    current = 0;
-    const tagsEl = viewer.querySelector(".tplTags");
-
-    slidesEl.innerHTML = slides
-      .map(
-        (s) =>
-          `<div class="tplSlide"><img src="${s.image}" alt=""></div>`
-      )
-      .join("");
-
-    dotsEl.innerHTML = slides
-      .map((_, i) => `<button data-i="${i}"></button>`)
-      .join("");
-
-    tagsEl.innerHTML = "";
-
-    if (template.tags) {
-      template.tags.split(",").forEach(tag => {
-        const span = document.createElement("span");
-        span.className = "tplTag";
-        span.textContent = tag.trim();
-        tagsEl.appendChild(span);
-      });
-    }
-
-    viewer.hidden = false;
-    update();
-  }
-
-  function closeViewer() {
-    viewer.hidden = true;
-  }
-
-  function update() {
-    slidesEl.style.transform = `translateX(-${current * 100}%)`;
-
-    const slide = slides[current];
-    descEl.innerHTML = slide.desc || "";
-    noteEl.innerHTML = slide.note || "";
-
-    dotsEl.querySelectorAll("button").forEach((b, i) => {
-      b.classList.toggle("is-active", i === current);
-    });
-  }
-
-  viewer.querySelector(".tplNav--prev").onclick = () => {
-    current = (current - 1 + slides.length) % slides.length;
-    update();
-  };
-
-  viewer.querySelector(".tplNav--next").onclick = () => {
-    current = (current + 1) % slides.length;
-    update();
-  };
-
-  dotsEl.onclick = (e) => {
-    const i = e.target.dataset.i;
-    if (i !== undefined) {
-      current = Number(i);
-      update();
-    }
-  };
-
-  viewer.querySelector(".tplViewer__close").onclick = closeViewer;
-  viewer.querySelector(".tplViewer__backdrop").onclick = closeViewer;
-
-  window.bindTemplateCards = function (templates) {
-    document.querySelectorAll(".tplCard").forEach((card, idx) => {
-      card.addEventListener("click", () => {
-        openViewer(templates[idx]);
-      });
-    });
-  };
-})();
-
-
-/* =========================
    Portfolio
 ========================= */
 (function () {
@@ -1529,11 +1180,7 @@ function bindFAQToggle() {
   function normalizeImageUrl(url) {
     const s = String(url || "").trim();
     if (!s) return "";
-
-    // 이미 변환된 형태면 그대로
     if (s.includes("lh3.googleusercontent.com/d/")) return s;
-
-    // drive 링크면 파일 id 뽑아서 변환
     if (s.includes("drive.google.com")) {
       const id = extractDriveFileId(s);
       if (id) return `https://lh3.googleusercontent.com/d/${id}`;
@@ -1684,4 +1331,360 @@ function bindFAQToggle() {
   }
 
   document.addEventListener("DOMContentLoaded", loadPortfolio);
+})();
+
+
+/* =========================
+   Templates
+========================= */
+(function () {
+  const CSV_BASE =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7bBd8d_YfahCugR2TL-zaYDB7r3-aMXRBifboBW7bLlcJv-ffmtl1TkjmUXa0zowJyEKe8BkFc9ux/pub?gid=279672905&single=true&output=csv";
+
+  const SHEET_NAME = "templates";
+  const TARGET_ID = "templates";
+
+  // ---------- utils ----------
+  function toBool(v) {
+    const s = String(v ?? "").trim().toLowerCase();
+    return s === "true" || s === "1" || s === "yes" || s === "y";
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let cur = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+
+      if (ch === '"' && inQuotes && next === '"') {
+        cur += '"';
+        i++;
+        continue;
+      }
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (!inQuotes && (ch === "," || ch === "\n" || ch === "\r")) {
+        row.push(cur);
+        cur = "";
+
+        if (ch === "\r" && next === "\n") i++;
+        if (ch === "\n" || ch === "\r") {
+          if (row.some((c) => String(c).trim() !== "")) rows.push(row);
+          row = [];
+        }
+        continue;
+      }
+
+      cur += ch;
+    }
+
+    row.push(cur);
+    if (row.some((c) => String(c).trim() !== "")) rows.push(row);
+    return rows;
+  }
+
+  function rowsToObjects(rows) {
+    const header = rows[0].map((h) => String(h).trim());
+    const body = rows.slice(1);
+
+    return body.map((r) => {
+      const obj = {};
+      header.forEach((h, i) => (obj[h] = r[i] ?? ""));
+      return obj;
+    });
+  }
+
+  function normalizeImageUrl(url) {
+    const u = String(url || "").trim();
+    if (!u) return "";
+    if (u.includes("lh3.googleusercontent.com")) return u;
+
+    const m1 = u.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (m1?.[1]) return `https://lh3.googleusercontent.com/d/${m1[1]}`;
+
+    const m2 = u.match(/^[a-zA-Z0-9_-]{10,}$/);
+    if (m2) return `https://lh3.googleusercontent.com/d/${u}`;
+
+    return u;
+  }
+
+  function toNum(v) {
+    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatWon(n) {
+    const num = Number(n);
+    if (!Number.isFinite(num)) return "0원";
+    return `${num.toLocaleString("ko-KR")}원`;
+  }
+
+  function normalizeRow(raw) {
+    const group = String(raw.group ?? "").trim() || "기타";
+    const order = Number(String(raw.order ?? "").trim()) || 0;
+
+    const key = String(raw.key ?? "").trim();
+    const name = String(raw.name ?? "").trim() || key || "템플릿";
+    const desc = String(raw.desc ?? "").trim();
+
+    const thumb = normalizeImageUrl(raw.thumb);
+
+    const basic_price = toNum(raw.basic_price);
+    const standard_price = toNum(raw.standard_price);
+
+    const hidden = toBool(raw.hidden);
+
+    return {
+      group,
+      order,
+      key,
+      name,
+      desc,
+      thumb,
+      basic_price,
+      standard_price,
+      hidden,
+    };
+  }
+
+  function groupByGroup(rows) {
+    const map = new Map();
+
+    rows.forEach((r0) => {
+      const r = normalizeRow(r0);
+      if (r.hidden) return;
+      if (!r.thumb) return;
+
+      if (!map.has(r.group)) map.set(r.group, []);
+      map.get(r.group).push(r);
+    });
+
+    const groups = Array.from(map.entries())
+      .map(([group, items]) => {
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
+        return {
+          group,
+          order: items.length ? items[0].order : 0,
+          items,
+        };
+      })
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    return groups;
+  }
+
+  function renderGroupCards(groups) {
+    const root = document.getElementById(TARGET_ID);
+    if (!root) return;
+
+    if (!groups.length) {
+      root.innerHTML = `
+        <div class="sec__head">
+          <p class="sec__eyebrow">템플릿 미리보기</p>
+          <h2 class="sec__title">템플릿 쇼케이스</h2>
+          <p class="sec__desc">표시할 템플릿이 없습니다.</p>
+        </div>
+        <div class="card">
+          <div class="notice__error">표시할 템플릿이 없습니다. (thumb 필수)</div>
+        </div>
+      `;
+      return;
+    }
+
+    const cards = groups
+      .map((g, idx) => {
+        const cover = g.items[0]?.thumb || "";
+        const count = g.items.length;
+
+        return `
+          <button type="button" class="tplGroupCard" data-group-idx="${idx}">
+            <div class="tplGroupCard__thumb">
+              <img src="${cover}" alt="${g.group} 대표 썸네일" loading="lazy">
+            </div>
+            <div class="tplGroupCard__meta">
+              <div class="tplGroupCard__name">${g.group}</div>
+              <div class="tplGroupCard__sub">${count}개 템플릿</div>
+            </div>
+          </button>
+        `.trim();
+      })
+      .join("");
+
+    root.innerHTML = `
+      <div class="sec__head">
+        <p class="sec__eyebrow">템플릿 미리보기</p>
+        <h2 class="sec__title">템플릿 쇼케이스</h2>
+        <p class="sec__desc">그룹을 클릭하면 해당 그룹의 템플릿을 슬라이드로 확인할 수 있습니다.</p>
+      </div>
+
+      <div class="card">
+        <div class="tplGrid tplGrid--groups">
+          ${cards}
+        </div>
+      </div>
+    `;
+  }
+
+  // ====== Modal slider (group) ======
+  const viewer = document.getElementById("tplViewer");
+  const slidesEl = viewer?.querySelector(".tplSlides");
+  const dotsEl = viewer?.querySelector(".tplDots");
+  const descEl = viewer?.querySelector(".tplCaption__desc");
+  const noteEl = viewer?.querySelector(".tplCaption__note");
+  const tagsEl = viewer?.querySelector(".tplTags");
+
+  let current = 0;
+  let currentGroup = null; // {group, items[]}
+  let eventsBound = false;
+
+  function openViewer(groupObj) {
+    if (!viewer || !slidesEl || !dotsEl || !descEl || !noteEl) return;
+
+    currentGroup = groupObj;
+    current = 0;
+
+    if (tagsEl) {
+      tagsEl.innerHTML = `<span class="tplTag">${groupObj.group}</span>`;
+    }
+
+    slidesEl.innerHTML = groupObj.items
+      .map((it) => `<div class="tplSlide"><img src="${it.thumb}" alt=""></div>`)
+      .join("");
+
+    dotsEl.innerHTML = groupObj.items
+      .map((_, i) => `<button type="button" data-i="${i}" aria-label="${i + 1}번"></button>`)
+      .join("");
+
+    viewer.hidden = false;
+    document.body.style.overflow = "hidden";
+    update();
+  }
+
+  function closeViewer() {
+    if (!viewer) return;
+    viewer.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function update() {
+    if (!currentGroup) return;
+
+    const items = currentGroup.items;
+    const len = items.length;
+    if (!len) return;
+
+    current = ((current % len) + len) % len;
+
+    const it = items[current];
+    slidesEl.style.transform = `translateX(-${current * 100}%)`;
+
+    descEl.textContent = it?.name || "";
+
+    const basic = formatWon(it?.basic_price || 0);
+    const standard = formatWon(it?.standard_price || 0);
+
+    noteEl.innerHTML = `
+      ${it?.desc ? `<div class="tplNote__desc">${it.desc}</div>` : ""}
+      <div class="tplNote__price">
+        <span class="tplPrice">베이직 +${basic}</span>
+        <span class="tplPrice">스탠다드 +${standard}</span>
+        <span class="tplPrice tplPrice--muted">프리미엄: 무료</span>
+      </div>
+    `.trim();
+
+    dotsEl.querySelectorAll("button").forEach((b, i) => {
+      b.classList.toggle("is-active", i === current);
+    });
+  }
+
+  function bindViewerEventsOnce() {
+    if (!viewer || eventsBound) return;
+    eventsBound = true;
+
+    const prevBtn = viewer.querySelector(".tplNav--prev");
+    const nextBtn = viewer.querySelector(".tplNav--next");
+
+    // slide loop
+    prevBtn?.addEventListener("click", () => {
+      if (!currentGroup) return;
+      const len = currentGroup.items.length;
+      if (!len) return;
+      current = (current - 1 + len) % len;
+      update();
+    });
+
+    nextBtn?.addEventListener("click", () => {
+      if (!currentGroup) return;
+      const len = currentGroup.items.length;
+      if (!len) return;
+      current = (current + 1) % len;
+      update();
+    });
+
+    dotsEl?.addEventListener("click", (e) => {
+      const t = e.target;
+      const i = t?.dataset?.i;
+      if (i !== undefined && i !== null) {
+        current = Number(i);
+        update();
+      }
+    });
+
+    viewer.querySelector(".tplViewer__close")?.addEventListener("click", closeViewer);
+    viewer.querySelector(".tplViewer__backdrop")?.addEventListener("click", closeViewer);
+
+    window.addEventListener("keydown", (e) => {
+      if (!viewer || viewer.hidden) return;
+
+      if (e.key === "Escape") closeViewer();
+      if (e.key === "ArrowLeft") prevBtn?.click();
+      if (e.key === "ArrowRight") nextBtn?.click();
+    });
+  }
+
+  function bindGroupCards(groups) {
+    document.querySelectorAll(".tplGroupCard").forEach((card) => {
+      card.addEventListener("click", () => {
+        const idx = Number(card.dataset.groupIdx);
+        const g = groups[idx];
+        if (g) openViewer(g);
+      });
+    });
+  }
+
+  async function loadTemplates() {
+    const root = document.getElementById(TARGET_ID);
+    if (!root) return;
+
+    const url = CSV_BASE + `&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
+
+      const csvText = await res.text();
+      const rows = parseCSV(csvText);
+      if (!rows || rows.length < 2) throw new Error("CSV empty");
+
+      const objs = rowsToObjects(rows);
+      const groups = groupByGroup(objs);
+
+      renderGroupCards(groups);
+      bindViewerEventsOnce();
+      bindGroupCards(groups);
+    } catch (err) {
+      console.warn("[templates] load failed:", err);
+      root.innerHTML =
+        `<div class="notice__error">템플릿을 불러오지 못했습니다. (시트 공개/탭/헤더 확인)</div>`;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadTemplates);
 })();

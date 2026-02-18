@@ -1,182 +1,313 @@
+/* =========================================================
+   Peach / Coral Theme (Warm Only)
+========================================================= */
+:root{
+  --line: rgba(80,60,60,.12);
+
+  --accent: #ffbfb6;
+  --accent-soft: #ffe6e1;
+  --accent-strong: #ff9c91;
+
+  --ink: #2f2626;
+  --muted: rgba(47,38,38,.60);
+}
+
+
+/* =========================================================
+   Templates Section
+========================================================= */
 #templates.sec {
-    position: relative;
-    background: linear-gradient(
+  position: relative;
+  background: linear-gradient(
     to bottom,
-    #fe97904d,
+    #fe97904d 0%,
     #ffdcb14d 220px
-    );
+  );
 }
 
 #templates .card {
-    margin: 0 auto;
-    max-width: 1080px;
+  margin: 0 auto;
+  max-width: 1080px;
 }
 
-.tplGrid {
+
+/* =========================================================
+   Group Grid
+========================================================= */
+#templates .tplGrid--groups{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 18px;
 }
 
-.tplCard__thumb {
-  border-radius: 14px;
+.tplGroupCard{
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255,255,255,.85);
+  padding: 14px;
+  cursor: pointer;
+
+  box-shadow: 0 18px 40px rgba(0,0,0,.08);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.tplGroupCard:hover{
+  transform: translateY(-6px);
+  box-shadow: 0 26px 60px rgba(0,0,0,.12);
+}
+
+.tplGroupCard__thumb{
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: #fff;
-  aspect-ratio: 16 / 10;
+  background: #f8f6f5;
+  aspect-ratio: 16 / 9;
 }
 
-.tplCard__thumb img {
+.tplGroupCard__thumb img{
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
-.tplCard__meta {
+.tplGroupCard__meta{
   margin-top: 10px;
 }
 
-.tplCard__name {
+.tplGroupCard__name{
   font-weight: 800;
-  font-size: 14px;
+  font-size: 15px;
+  color: var(--ink);
 }
 
-.tplCard__sub {
-  margin-top: 4px;
+.tplGroupCard__sub{
   font-size: 12px;
   color: var(--muted);
+  margin-top: 4px;
 }
 
-@media (max-width: 960px) {
-  .tplGrid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 960px){
+  #templates .tplGrid--groups{
+    grid-template-columns: repeat(2,1fr);
+  }
 }
-@media (max-width: 640px) {
-  .tplGrid { grid-template-columns: 1fr; }
+
+@media (max-width: 640px){
+  #templates .tplGrid--groups{
+    grid-template-columns: 1fr;
+  }
 }
 
 
-/* ===== Template Viewer ===== */
-.tplViewer {
+/* =========================================================
+   Viewer (Modal)
+========================================================= */
+.tplViewer{
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: 6vh 16px;
 }
 
-.tplViewer[hidden] {
-  display: none;
-}
+.tplViewer[hidden]{ display:none !important; }
 
-.tplViewer__backdrop {
+.tplViewer__backdrop{
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(60,40,40,.35);
 }
 
-.tplViewer__panel {
+.tplViewer__panel{
   position: relative;
-  max-width: 960px;
-  margin: 6vh auto;
-  background: #fff;
-  border-radius: 18px;
+  width: min(960px,100%);
+  max-height: calc(100vh - 12vh);
+  overflow: auto;
+
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-radius: 24px;
   padding: 20px;
+
+  box-shadow: 0 30px 90px rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.5);
 }
 
-.tplViewer__close {
+
+/* =========================================================
+   Close Button (Soft Coral Glass)
+========================================================= */
+.tplViewer__close{
   position: absolute;
-  top: 14px;
-  right: 16px;
-  border: 0;
-  background: none;
-  font-size: 20px;
-  cursor: pointer;
+  top: 10px;
+  right: 25px;
+  width: 38px;
+  height: 38px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.85);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  transition: all .2s ease;
+  font-weight: 900;
 }
 
-/* Slider */
-.tplSlider {
+.tplViewer__close:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+}
+
+
+/* =========================================================
+   Slider
+========================================================= */
+.tplSlider{
   position: relative;
   overflow: hidden;
+  border-radius: 18px;
 }
 
-.tplSlides {
+.tplSlides{
   display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
   transition: transform .35s ease;
 }
 
-.tplSlide {
+.tplSlide{
+  flex: 0 0 100%;
   min-width: 100%;
 }
 
-.tplSlide img {
+.tplSlide img{
   width: 100%;
-  display: block;
-  border-radius: 12px;
+  max-height: min(62vh,560px);
+  object-fit: contain;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #f9f7f6;
 }
 
-/* Nav */
-.tplNav {
+
+/* =========================================================
+   Navigation Buttons (Refined, No Billiard Look)
+========================================================= */
+.tplNav{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0,0,0,.5);
-  color: #fff;
-  border: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.82);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 18px 40px rgba(0,0,0,.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 18px;
+  font-weight: 900;
+  transition: all .2s ease;
+  z-index: 10;
 }
 
-.tplNav--prev { left: 10px; }
-.tplNav--next { right: 10px; }
-
-/* Caption */
-.tplCaption {
-  margin-top: 14px;
+.tplNav:hover{
+  transform: translateY(-50%) translateX(-2px);
+  box-shadow: 0 24px 55px rgba(0,0,0,.16);
 }
 
-.tplCaption__desc {
+.tplNav--prev{ left: 18px; }
+.tplNav--next{ right: 18px; }
+
+.tplNav--prev:hover{ transform: translateY(-50%) translateX(-5px); }
+.tplNav--next:hover{ transform: translateY(-50%) translateX(5px); }
+
+
+/* =========================================================
+   Caption + Tags + Price
+========================================================= */
+.tplTags{
+  margin-bottom: 12px;
+}
+
+.tplTag{
+  display: inline-block;
+  font-size: 12px;
   font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
-.tplCaption__note {
-  margin-top: 4px;
+.tplCaption{
+  margin-top: 16px;
+}
+
+.tplCaption__desc{
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.tplCaption__note{
+  margin-top: 6px;
   font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.tplNote__price{
+  margin-top: 12px;
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tplPrice{
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.tplPrice--muted{
+  background: rgba(255,255,255,.6);
   color: var(--muted);
 }
 
-/* Dots */
-.tplDots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 10px;
+
+/* =========================================================
+   Dots
+========================================================= */
+.tplDots{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:14px;
 }
 
-.tplDots button {
+.tplDots button{
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  border: 0;
-  background: #ccc;
-  cursor: pointer;
-}
-
-.tplDots button.is-active {
-  background: #333;
-}
-
-.tplTags {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.tplTag {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(126,194,236,.18);
-  color: var(--ink3);
+  border: 0;
+  background: rgba(47,38,38,.18);
+  transition: all .2s ease;
+}
+
+.tplDots button.is-active{
+  width: 24px;
+  background: var(--accent-strong);
 }

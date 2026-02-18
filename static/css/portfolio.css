@@ -134,8 +134,8 @@
   color:#4b5563;
 }
 
-/* hover 등장 */
 #portfolio .pfCard:hover .pfCard__ext{
   opacity:1;
   transform:translateY(0) scale(1);
 }
+
